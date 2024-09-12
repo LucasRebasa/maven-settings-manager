@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"encoding/xml"
+	"bufio"
 	"fmt"
 	"os"
 	"regexp"
@@ -35,28 +35,21 @@ func FixXMLData(data []byte) []byte {
 	return []byte(strSettingsData)
 }
 
-func GetParamsFromTemplate(templateFile *os.File) []string {
+func GetParamsFromTemplate(templateFile *os.File) ([]string, []string) {
 	var params []string
-	decoder := xml.NewDecoder(templateFile)
-	regex := regexp.MustCompile(`%[A-Za-z0-9]+:[A-Za-z0-9]+%`)
-	for {
-		t, _ := decoder.Token()
-		if t == nil {
-			break
-		}
-		switch se := t.(type) {
-		case xml.StartElement:
-			var content string
-			decoder.DecodeElement(&content, &se)
-			findings := regex.FindAllString(content, -1)
-			for _, v := range findings {
-				//Split %key:value% in slice [key:value] and then extracts value into [key, value]
-				paramKey := strings.Split(strings.Split(v, "%")[0], ":")[0]
-				params = append(params, paramKey)
+	var descriptions []string
+	regex := regexp.MustCompile(`%\s*[A-Za-z0-9 ]+\s*:\s*[A-Za-z0-9 ]+\s*%`)
+	scanner := bufio.NewScanner(templateFile)
+	for scanner.Scan() {
+		currentText := scanner.Text()
+		findings := regex.FindAllString(currentText, -1)
+		for _, finding := range findings {
+			paramKeyValue := strings.Split(strings.Split(finding, "%")[1], ":")
+			if paramKeyValue[0] != "APP" {
+				params = append(params, paramKeyValue[0])
+				descriptions = append(descriptions, paramKeyValue[1])
 			}
-			fmt.Println(findings)
-		default:
 		}
 	}
-	return params
+	return params, descriptions
 }

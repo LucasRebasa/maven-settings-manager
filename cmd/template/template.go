@@ -3,6 +3,7 @@ package template
 import (
 	"fmt"
 
+	"github.com/msm/cmd/template/list"
 	"github.com/msm/cmd/template/use"
 	"github.com/spf13/cobra"
 )
@@ -15,6 +16,7 @@ var TemplateCmd = &cobra.Command{
 
 func init() {
 	TemplateCmd.AddCommand(use.UseCmd)
+	TemplateCmd.AddCommand(list.ListCmd)
 }
 
 func run(cmd *cobra.Command, args []string) {

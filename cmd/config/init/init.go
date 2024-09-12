@@ -180,7 +180,11 @@ func setHomeDir() {
 	}
 
 	viper.Set(constants.HOME_SETTINGS_DIR, home)
-
+	err := os.Mkdir(home+"/templates", os.ModeAppend)
+	if err != nil {
+		panic(err)
+	}
+	viper.Set(constants.TEMPLATES_DIR, home+"/templates")
 	fmt.Printf("Settings path set to: %v\n", home)
 }
 
@@ -200,7 +204,7 @@ func createConfigFile() {
 	if err != nil {
 		panic(err)
 	}
-	configPath := homePath+"/.msm" 
+	configPath := homePath + "/.msm"
 	err = os.Mkdir(configPath, os.ModeDevice)
 	if err != nil {
 		if os.IsExist(err) {
