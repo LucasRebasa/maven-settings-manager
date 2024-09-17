@@ -125,7 +125,7 @@ func setAppName(absoluteFileName, appFileName string) {
 	var appName string
 	populateMap(absoluteFileName, appFileName, &appName)
 
-	settings.Comment = "%APP:" + appName + "%"
+	settings.Comment = "%NAME:" + appName + "%"
 	settingsData, _ := xml.MarshalIndent(settings, "", "\t")
 	fixedSettingsData := utils.FixXMLData(settingsData)
 	err = os.WriteFile(absoluteFileName, fixedSettingsData, os.ModeAppend)
