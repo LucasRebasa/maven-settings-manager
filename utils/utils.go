@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -49,7 +50,8 @@ func GetParamsFromTemplate(templateFile *os.File) ([]string, []string) {
 		findings := regex.FindAllString(currentText, -1)
 		for _, finding := range findings {
 			paramKeyValue := strings.Split(strings.Split(finding, "%")[1], ":")
-			if paramKeyValue[0] != "NAME" {
+			
+			if paramKeyValue[0] != "NAME" && !slices.Contains(params,paramKeyValue[0]) {
 				params = append(params, paramKeyValue[0])
 				descriptions = append(descriptions, paramKeyValue[1])
 			}
@@ -63,7 +65,7 @@ func CreateSettingsFile(data []string, appName string) {
 	fileName := settingsDir + "/settings - " + appName + ".xml"
 	var tries int
 	checkExistingFile(&fileName, settingsDir, appName, &tries)
-	
+
 	file, err := os.Create(fileName)
 	if err != nil {
 		panic(err)
@@ -76,14 +78,19 @@ func CreateSettingsFile(data []string, appName string) {
 		}
 	}
 	writer.Flush()
+
+	mapFileAppName := viper.GetStringMapString(constants.MAP_FILE_APPNAME)
+	mapFileAppName[appName] = fileName
+	viper.Set(constants.MAP_FILE_APPNAME, mapFileAppName)
+	viper.WriteConfig()
 	fmt.Println("File created: ", fileName)
 	file.Close()
 }
 
 func checkExistingFile(fileName *string, settingsDir, appName string, tries *int) {
-	_,err := os.Stat(*fileName)
+	_, err := os.Stat(*fileName)
 	if err == nil {
-		*fileName = settingsDir + "/settings - " + appName + " - " + strconv.Itoa(*tries) + ".xml"
+		*fileName = settingsDir + "/settings - " + appName + strconv.Itoa(*tries) + ".xml"
 		fmt.Println("File Already exists, setting name to: ", *fileName)
 		*tries++
 		checkExistingFile(fileName, settingsDir, appName, tries)
@@ -96,18 +103,18 @@ func ParseCustomFlagsFromTemplate(cmd *cobra.Command, args []string, templateNam
 	for _, v := range params {
 		cmd.Flags().String(v, "", "Flag for setting the param \""+v+"\"")
 	}
-	
+
 	cmd.Flags().String("name", "", "Flag for setting the app or template name")
-	
+
 	params = append(params, "name")
 	cmd.DisableFlagParsing = false
 	err := cmd.ParseFlags(args)
 	if err != nil {
 		fmt.Println(err)
 		fmt.Println("Wrong parameters.")
-		fmt.Println("Usage:")
+		fmt.Println("Usage (required options):")
 		for _, v := range params {
-			fmt.Printf("--%v %v", v, "value")
+			fmt.Printf("--%v %v \n", v, "value")
 		}
 		return errors.New("")
 	}
@@ -139,14 +146,14 @@ func UseTemplate(templateName string, cmd *cobra.Command, createTemplate bool) {
 		mapParamValue[param] = value
 	}
 	appName, _ := cmd.Flags().GetString("name")
-	fmt.Println("NAME: ",appName)
+	fmt.Println("NAME: ", appName)
 	mapParamValue["name"] = appName
 	data := getFileWithValuesSet(xmlFile, mapParamValue)
 	xmlFile.Close()
 
-	if createTemplate{
-		createTemplateFile(data, appName)
-	}else{
+	if createTemplate {
+		createTemplateFile(data, appName, mapParamValue)
+	} else {
 		CreateSettingsFile(data, appName)
 	}
 }
@@ -160,14 +167,15 @@ func getFileWithValuesSet(file *os.File, mapParamValue map[string]string) []stri
 		findings := regex.FindAllString(currentText, -1)
 		for _, finding := range findings {
 			paramKeyValue := strings.Split(strings.Split(finding, "%")[1], ":")
-			value, ok := mapParamValue[strings.ToLower(paramKeyValue[0])]
+			fmt.Printf("Param %v Value %v \n", paramKeyValue[0], mapParamValue[paramKeyValue[0]])
+			value, ok := mapParamValue[paramKeyValue[0]]
 			if ok {
 				fmt.Printf(`Value "%v" set to "%v"`, paramKeyValue[0], value)
 				fmt.Println("")
 				var modifiedLine string
-				if paramKeyValue[0] == "NAME" {
-					modifiedLine = strings.Replace(currentText, finding, fmt.Sprintf("NAME:%v", value), -1)
-				} else{
+				if paramKeyValue[0] == "name" {
+					modifiedLine = strings.Replace(currentText, finding, fmt.Sprintf("name:%v", value), -1)
+				} else {
 					modifiedLine = strings.Replace(currentText, finding, value, -1)
 				}
 				currentText = modifiedLine
@@ -179,12 +187,12 @@ func getFileWithValuesSet(file *os.File, mapParamValue map[string]string) []stri
 	return lines
 }
 
-func createTemplateFile(data []string, appName string) {
+func createTemplateFile(data []string, appName string, params map[string]string) {
 	templatesDir := viper.GetString(constants.TEMPLATES_DIR)
 	fileName := templatesDir + "/" + appName + ".xml"
 	var tries int
 	checkExistingFile(&fileName, templatesDir, appName, &tries)
-	
+
 	file, err := os.Create(fileName)
 	if err != nil {
 		panic(err)
@@ -197,7 +205,15 @@ func createTemplateFile(data []string, appName string) {
 		}
 	}
 	writer.Flush()
+	templates := viper.GetStringMapStringSlice(constants.TEMPLATES_MAP)
+	paramsNames := make([]string, 0)
+	for name := range params {
+		paramsNames = append(paramsNames, name)
+	}
+	templateName := strings.Split(strings.Split(fileName, "-")[1], ".")[0]
+	templates[templateName] = paramsNames
+	viper.Set(constants.TEMPLATES_MAP, templates)
+	viper.WriteConfig()
 	fmt.Println("File created: ", fileName)
 	file.Close()
 }
-

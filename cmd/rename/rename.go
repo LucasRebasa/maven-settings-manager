@@ -49,6 +49,7 @@ func renameFiles(appsMap map[string]string, oldName, newName string) {
 	var newAppFileName string
 	if currentApp == oldName {
 		viper.Set(constants.CURRENT_APP, newName)
+		newAppFileName = oldAppFileName
 	} else {
 		newAppFileName = strings.Join(splittedOldAppFileName[0:len(splittedOldAppFileName)-1], "/") + "/settings - " + newName + ".xml"
 		err := os.Rename(oldAppFileName, newAppFileName)

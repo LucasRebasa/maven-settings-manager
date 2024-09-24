@@ -55,7 +55,7 @@ func run(cmd *cobra.Command, args []string) {
 				} else {
 					params, description := utils.GetParamsFromTemplate(file)
 					for i := range params {
-						fmt.Printf("\t%v --> Param: %v, Description: %v  ", name, params[i], description[i])
+						fmt.Printf("\t%v --> Param: %v, Description: %v \n", name, params[i], description[i])
 					}
 				}
 			}

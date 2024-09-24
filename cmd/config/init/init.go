@@ -125,7 +125,7 @@ func setAppName(absoluteFileName, appFileName string) {
 	var appName string
 	populateMap(absoluteFileName, appFileName, &appName)
 
-	settings.Comment = "%NAME:" + appName + "%"
+	settings.Comment = "%name:" + appName + "%"
 	settingsData, _ := xml.MarshalIndent(settings, "", "\t")
 	fixedSettingsData := utils.FixXMLData(settingsData)
 	err = os.WriteFile(absoluteFileName, fixedSettingsData, os.ModeAppend)
@@ -180,11 +180,16 @@ func setHomeDir() {
 	}
 
 	viper.Set(constants.HOME_SETTINGS_DIR, home)
-	err := os.Mkdir(home+"/templates", os.ModeAppend)
+	templatesDir := home + "/templates"
+	err := os.Mkdir(templatesDir, os.ModeAppend)
 	if err != nil {
-		panic(err)
+		err = os.RemoveAll(templatesDir)
+		if err != nil {
+			panic(err)
+		}
+		os.Mkdir(templatesDir, os.ModeAppend)
 	}
-	viper.Set(constants.TEMPLATES_DIR, home+"/templates")
+	viper.Set(constants.TEMPLATES_DIR, templatesDir)
 	fmt.Printf("Settings path set to: %v\n", home)
 }
 

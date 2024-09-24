@@ -16,7 +16,6 @@ var CreateCmd = &cobra.Command{
 }
 
 func run(cmd *cobra.Command, args []string) {
-	//TODO: Actualizar el archivo de configuracion cuando se crea o se usa un template 
 	err := utils.ParseCustomFlagsFromTemplate(cmd,args, args[0], false)
 	if err != nil {
 		fmt.Println(err)
