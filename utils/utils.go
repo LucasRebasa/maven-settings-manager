@@ -189,6 +189,7 @@ func getFileWithValuesSet(file *os.File, mapParamValue map[string]string) []stri
 
 func createTemplateFile(data []string, appName string, params map[string]string) {
 	templatesDir := viper.GetString(constants.TEMPLATES_DIR)
+	appName = strings.ToLower(appName)
 	fileName := templatesDir + "/" + appName + ".xml"
 	var tries int
 	checkExistingFile(&fileName, templatesDir, appName, &tries)
