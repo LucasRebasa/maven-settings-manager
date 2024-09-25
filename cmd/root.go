@@ -10,6 +10,7 @@ import (
 	"github.com/msm/cmd/list"
 	"github.com/msm/cmd/rename"
 	"github.com/msm/cmd/set"
+	"github.com/msm/cmd/sync"
 	"github.com/msm/cmd/template"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -61,6 +62,7 @@ func init() {
 	rootCmd.AddCommand(list.ListCmd)
 	rootCmd.AddCommand(rename.RenameCmd)
 	rootCmd.AddCommand(template.TemplateCmd)
+	rootCmd.AddCommand(sync.SyncCmd)
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
